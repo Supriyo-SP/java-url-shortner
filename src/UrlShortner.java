@@ -3,8 +3,8 @@ import java.util.Random;
 import java.util.Scanner;
 
 public class UrlShortner {
-    private static HashMap<String,String> urlMap= new HashMap<>();
-    private static Random random = new Random();
+    private static final HashMap<String,String> urlMap= new HashMap<>();
+    private static final Random random = new Random();
     private static String generateKey(){
         String chars ="abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
         StringBuilder key = new StringBuilder();
