@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>URL Shortener</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        /* Reset */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+          font-family: "Segoe UI", Roboto, sans-serif;
+          background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+          color: #fff;
+          min-height: 100vh;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          padding: 20px;
+        }
+
+        .container {
+          background: rgba(255, 255, 255, 0.05);
+          border-radius: 16px;
+          backdrop-filter: blur(10px);
+          box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+          padding: 30px;
+          width: 100%;
+          max-width: 500px;
+          text-align: center;
+          animation: fadeIn 0.6s ease-in-out;
+        }
+
+        h1 {
+          font-size: 2rem;
+          margin-bottom: 20px;
+          background: linear-gradient(90deg, #00c6ff, #0072ff);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+        }
+
+        input[type="text"] {
+          width: 100%;
+          padding: 14px;
+          border: none;
+          border-radius: 10px;
+          margin-bottom: 15px;
+          font-size: 1rem;
+          outline: none;
+          background: rgba(255,255,255,0.1);
+          color: #fff;
+        }
+
+        input[type="text"]::placeholder {
+          color: #ccc;
+        }
+
+        button {
+          width: 100%;
+          padding: 14px;
+          border: none;
+          border-radius: 10px;
+          background: linear-gradient(90deg, #00c6ff, #0072ff);
+          color: white;
+          font-size: 1rem;
+          font-weight: bold;
+          cursor: pointer;
+          transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        button:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 6px 15px rgba(0, 114, 255, 0.4);
+        }
+
+        .result {
+          margin-top: 20px;
+          background: rgba(255,255,255,0.08);
+          padding: 15px;
+          border-radius: 10px;
+          font-size: 0.95rem;
+          word-wrap: break-word;
+          display: none;
+        }
+
+        .result a {
+          color: #00c6ff;
+          text-decoration: none;
+        }
+
+        .result a:hover {
+          text-decoration: underline;
+        }
+
+        .error {
+          margin-top: 10px;
+          color: #ff6b6b;
+          font-size: 0.9rem;
+        }
+
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(20px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Responsive */
+        @media (max-width: 600px) {
+          h1 { font-size: 1.6rem; }
+          .container { padding: 20px; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>🚀 URL Shortener</h1>
+    <input id="urlInput" type="text" placeholder="Enter URL (e.g. https://example.com)">
+    <button onclick="shortenUrl()">Shorten URL</button>
+    <div id="result" class="result"></div>
+    <div id="error" class="error"></div>
+</div>
+
+<script>
+    async function shortenUrl() {
+      const urlInput = document.getElementById("urlInput").value.trim();
+      const resultDiv = document.getElementById("result");
+      const errorDiv = document.getElementById("error");
+      resultDiv.style.display = "none";
+      errorDiv.textContent = "";
+
+      if (!urlInput) {
+        errorDiv.textContent = "⚠️ Please enter a valid URL.";
+        return;
+      }
+
+      try {
+        const response = await fetch("/api/shorten", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ url: urlInput })
+        });
+
+        if (!response.ok) throw new Error("Server error");
+
+        const data = await response.json();
+        resultDiv.style.display = "block";
+        resultDiv.innerHTML = `
+          <p><b>Original:</b> ${data.originalUrl}</p>
+          <p><b>Short:</b> <a href="${data.shortUrl}" target="_blank">${data.shortUrl}</a></p>
+        `;
+        document.getElementById("urlInput").value = "";
+      } catch (err) {
+        errorDiv.textContent = "❌ Failed to shorten URL. Please try again.";
+        console.error(err);
+      }
+    }
+</script>
+</body>
+</html>

@@ -1,28 +1,30 @@
 package com.supriyo.urlShortener.service;
 
 import com.supriyo.urlShortener.model.Url;
-import com.supriyo.urlShortener.repository.InMemoryUrlRepository;
+import com.supriyo.urlShortener.repository.UrlRepository;
 import org.springframework.stereotype.Service;
 
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.Objects;
 import java.util.concurrent.atomic.AtomicLong;
 
 @Service
 public class UrlService {
 
-    private final InMemoryUrlRepository repository;
+    private final UrlRepository repository;
     private final AtomicLong counter = new AtomicLong(1000);
     private static final char[] BASE62 = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ".toCharArray();
 
-    public UrlService(InMemoryUrlRepository repository) {
-        this.repository = Objects.requireNonNull(repository);
+    public UrlService(UrlRepository repository) {
+        this.repository = repository; // JPA repository
     }
 
-    // shorten: returns the saved Url object
+    /**
+     * Shorten an original URL and save it in the database
+     */
     public Url shorten(String originalUrl, String hostBase) {
         String normalized = normalizeUrl(originalUrl);
+
         if (!isValidUrl(normalized)) {
             throw new IllegalArgumentException("Invalid URL: " + originalUrl);
         }
@@ -36,15 +38,18 @@ public class UrlService {
 
         String shortUrl = hostBase.endsWith("/") ? hostBase + "r/" + shortId : hostBase + "/r/" + shortId;
         Url url = new Url(shortId, normalized, shortUrl);
-        repository.save(url);
+        repository.save(url); // SAVE to H2 database
         return url;
     }
 
-    // resolve by id (returns Url or null)
+    /**
+     * Resolve a short URL ID to the original URL
+     */
     public Url resolve(String id) {
         return repository.findById(id).orElse(null);
     }
 
+    // Add http:// if missing
     private String normalizeUrl(String url) {
         String u = url.trim();
         if (!u.matches("^[a-zA-Z][a-zA-Z0-9+.-]*://.*")) {
@@ -53,6 +58,7 @@ public class UrlService {
         return u;
     }
 
+    // Validate URL
     private boolean isValidUrl(String url) {
         try {
             new URL(url);
@@ -62,6 +68,7 @@ public class UrlService {
         }
     }
 
+    // Convert number to Base62 string
     private String encodeBase62(long value) {
         if (value == 0) return "0";
         StringBuilder sb = new StringBuilder();
